@@ -44,7 +44,7 @@ jobs:
         TF_ACTION_WORKING_DIR: 'cicd/eks'
         AWS_ACCESS_KEY_ID:  ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
+        SOURCE_DIR: './src'
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
