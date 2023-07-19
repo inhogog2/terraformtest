@@ -38,6 +38,7 @@ jobs:
     - name: Terraform Init
       run: |
         pwd
+        ls
         terraform init
       env:
         TF_ACTION_WORKING_DIR: 'cicd/eks'
