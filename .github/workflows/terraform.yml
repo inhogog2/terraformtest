@@ -12,7 +12,7 @@ env:
   
 defaults:
   run:
-    working-directory: cicd/eks
+    working-directory: ./cicd/eks
     
 jobs:
   terraform:
