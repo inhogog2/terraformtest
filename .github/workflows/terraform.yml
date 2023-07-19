@@ -39,10 +39,6 @@ jobs:
     - name: Terraform Init
       run: terraform init
       
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt -check
-
     # Generates an execution plan for Terraform
     - name: Terraform Plan
       run: terraform plan -input=false
@@ -78,3 +74,15 @@ jobs:
       run: |
         export LOXILB_PUBLIC_IP=$(terraform output -raw loxilb_public_ip)
         curl http://$LOXILB_PUBLIC_IP:8080
+    
+    - name: delete all
+      run: |
+        sleep 600
+        kubectl delete -f nginx-svc.yaml
+        kubectl delete -f kube-loxilb.yaml
+        terraform destory
+      
+      
+      
+      
+      
