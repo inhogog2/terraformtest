@@ -9,11 +9,7 @@ permissions:
   contents: read
 env: 
   AWS_REGION: ap-northeast-2
-  
-defaults:
-  run:
-    working-directory: ./cicd/eks
-    
+
 jobs:
   terraform:
     name: 'Terraform'
@@ -43,6 +39,11 @@ jobs:
       run: |
         pwd
         terraform init
+      env:
+        TF_ACTION_WORKING_DIR: 'cicd/eks'
+        AWS_ACCESS_KEY_ID:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
