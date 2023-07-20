@@ -74,7 +74,7 @@ module "ec2_instance" {
   
   ami = "ami-067e38e5c47134f29"
   instance_type          = "t3.small"
-  key_name               = "aws-netlox"
+  key_name               = "aws-osaka"
   monitoring             = true
   
   vpc_security_group_ids = [ module.security-group.security_group_id]
