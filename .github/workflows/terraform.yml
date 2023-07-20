@@ -82,7 +82,7 @@ jobs:
         sleep 600
         kubectl delete -f nginx-svc.yaml
         kubectl delete -f kube-loxilb.yaml
-        terraform destroy
+        terraform destroy -input=false
       
       
       
