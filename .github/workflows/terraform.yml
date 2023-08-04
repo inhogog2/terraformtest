@@ -26,10 +26,6 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v3
-  
-    - name: Get Github Actions IP
-        id: ip
-        uses: haythem/public-ip@v1.2
 
     # AWS check 
     - name: Configure AWS credentials
@@ -81,30 +77,29 @@ jobs:
         kubectl apply -f sctp-svc.yaml
         sleep 10
       
-      - name: Get IPs
-        id: cicd-ips
-        run: |
-          echo "LOXILB_PUBLIC_IP=$(terraform output -raw loxilb_public_ip)" >> $GITHUB_OUTPUT
-          echo "LOXILB_PRIVATE_IP=$(terraform output -raw loxilb_private_ip)" >> $GITHUB_OUTPUT
-          echo "HOST_PUBLIC_IP=$(terraform output -raw host_public_ip)" >> $GITHUB_OUTPUT
-          echo "HOST_PRIVATE_IP=$(terraform output -raw host_private_ip)" >> $GITHUB_OUTPUT
-          echo "HOST_USER=ubuntu" >> $GITHUB_OUTPUT
+    - name: Get IPs
+      id: cicd-ips
+      run: |
+        echo "LOXILB_PUBLIC_IP=$(terraform output -raw loxilb_public_ip)" >> $GITHUB_OUTPUT
+        echo "LOXILB_PRIVATE_IP=$(terraform output -raw loxilb_private_ip)" >> $GITHUB_OUTPUT
+        echo "HOST_PUBLIC_IP=$(terraform output -raw host_public_ip)" >> $GITHUB_OUTPUT
+        echo "HOST_PRIVATE_IP=$(terraform output -raw host_private_ip)" >> $GITHUB_OUTPUT
+        echo "HOST_USER=ubuntu" >> $GITHUB_OUTPUT
         
-      - name: SSH Commands
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ steps.cicd-ips.outputs.HOST_PUBLIC_IP }}
-          username: ${{ steps.cicd-ips.outputs.HOST_USER }}
-          key: ${{ secrets.AWS_SSH_KEY }}
-          port: 22
-          script_stop: true
-          script: |
-            curl http://${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }}:8080
-            sleep 10
-            ./udp_client ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 50003
-            sleep 10
-           ./sctp_client ${{ steps.cicd-ips.outputs.HOST_PRIVATE_IP }} 0 ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 55004
-
+    - name: SSH Commands
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ steps.cicd-ips.outputs.HOST_PUBLIC_IP }}
+        username: ${{ steps.cicd-ips.outputs.HOST_USER }}
+        key: ${{ secrets.AWS_SSH_KEY }}
+        port: 22
+        script_stop: true
+        script: |
+          curl http://${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }}:8080
+          sleep 10
+          ./udp_client ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 50003
+          sleep 10
+          ./sctp_client ${{ steps.cicd-ips.outputs.HOST_PRIVATE_IP }} 0 ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 55004
     
     - name: delete all
       run: |
