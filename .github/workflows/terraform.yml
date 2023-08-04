@@ -26,7 +26,11 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v3
-     
+  
+    - name: Get Github Actions IP
+        id: ip
+        uses: haythem/public-ip@v1.2
+
     # AWS check 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -69,18 +73,44 @@ jobs:
         sleep 60
     
     - name: make Service with Pod
-      run: kubectl apply -f nginx-svc.yaml
-      
-    - name: Check
       run: |
-        sleep 60
-        export LOXILB_PUBLIC_IP=$(terraform output -raw loxilb_public_ip)
-        curl http://$LOXILB_PUBLIC_IP:8080
+        kubectl apply -f nginx-svc.yaml
+        sleep 10
+        kubectl apply -f udp-svc.yaml
+        sleep 10
+        kubectl apply -f sctp-svc.yaml
+        sleep 10
+      
+      - name: Get IPs
+        id: cicd-ips
+        run: |
+          echo "LOXILB_PUBLIC_IP=$(terraform output -raw loxilb_public_ip)" >> $GITHUB_OUTPUT
+          echo "LOXILB_PRIVATE_IP=$(terraform output -raw loxilb_private_ip)" >> $GITHUB_OUTPUT
+          echo "HOST_PUBLIC_IP=$(terraform output -raw host_public_ip)" >> $GITHUB_OUTPUT
+          echo "HOST_PRIVATE_IP=$(terraform output -raw host_private_ip)" >> $GITHUB_OUTPUT
+          echo "HOST_USER=ubuntu" >> $GITHUB_OUTPUT
+        
+      - name: SSH Commands
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ steps.cicd-ips.outputs.HOST_PUBLIC_IP }}
+          username: ${{ steps.cicd-ips.outputs.HOST_USER }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            curl http://${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }}:8080
+            sleep 10
+            ./udp_client ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 50003
+            sleep 10
+           ./sctp_client ${{ steps.cicd-ips.outputs.HOST_PRIVATE_IP }} 0 ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 55004
+
     
     - name: delete all
       run: |
-        sleep 600
         kubectl delete -f nginx-svc.yaml
+        kubectl delete -f udp-svc.yaml
+        kubectl delete -f sctp-svc.yaml
         kubectl delete -f kube-loxilb.yaml
         terraform destroy  -auto-approve -input=false
       

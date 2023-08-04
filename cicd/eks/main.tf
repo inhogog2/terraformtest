@@ -54,7 +54,6 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
-
   }
   
   eks_managed_node_groups = {
@@ -87,6 +86,26 @@ module "ec2_instance" {
   }
 }    
 
+module "ec2_instance2" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+  name = "host_node"
+
+  ami = "ami-0d126351255167386"
+  instance_type          = "t3.small"
+  key_name               = "aws-osaka"
+  monitoring             = true
+
+  vpc_security_group_ids = [ module.security-group.security_group_id]
+  subnet_id              = module.vpc.public_subnets[0]
+  associate_public_ip_address = "true"
+
+  tags = {
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
+
+
 # https://aws.amazon.com/blogs/containers/amazon-ebs-csi-driver-is-now-generally-available-in-amazon-eks-add-ons/ 
 data "aws_iam_policy" "ebs_csi_policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -109,7 +128,7 @@ module "security-group" {
   name        = "LoxiLB-node-sg" 
   description = "LoxiLB node security group"
   vpc_id      = module.vpc.vpc_id
-  use_name_prefix = "false"                            
+  use_name_prefix = "false" 
   ingress_with_cidr_blocks = [
     {
       from_port   = 22
@@ -135,8 +154,19 @@ module "security-group" {
       protocol    = "tcp"
       description = "loxilb"
       cidr_blocks = "0.0.0.0/0"
+    },{
+      from_port   = 0
+      to_port     = 65535
+      protocol    = 132
+      description = "sctp protocol"
+      cidr_blocks = "0.0.0.0/0"
+    },{
+      from_port   = 50003
+      to_port     = 50003
+      protocol    = "udp"
+      description = "udp"
+      cidr_blocks = "0.0.0.0/0"
     },
-
   ]
   ingress_with_source_security_group_id = [
     {
@@ -149,11 +179,11 @@ module "security-group" {
   ]
   egress_with_cidr_blocks = [
     {
-      from_port   = 0                                 
-      to_port     = 0                                 
-      protocol    = "-1"                              
-      description = "all"                             
-      cidr_blocks = "0.0.0.0/0"                       
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      description = "all"
+      cidr_blocks = "0.0.0.0/0"
     }
 ]
 }
