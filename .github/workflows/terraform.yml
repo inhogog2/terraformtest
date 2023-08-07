@@ -120,10 +120,14 @@ jobs:
           sleep 10
           ./sctp_client ${{ steps.cicd-ips.outputs.HOST_PRIVATE_IP }} 0 ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }} 55004
     
-    - name: delete all
+    - name: delete k8s configure
       run: |
         kubectl delete -f nginx-svc.yaml
         kubectl delete -f udp-svc.yaml
         kubectl delete -f sctp-svc.yaml
         kubectl delete -f kube-loxilb.yaml
+        
+    - name : delete testbed
+      if: ${{ always() }}
+      run: |
         terraform destroy  -auto-approve -input=false
