@@ -84,9 +84,29 @@ jobs:
         echo "LOXILB_PRIVATE_IP=$(terraform output -raw loxilb_private_ip)" >> $GITHUB_OUTPUT
         echo "HOST_PUBLIC_IP=$(terraform output -raw host_public_ip)" >> $GITHUB_OUTPUT
         echo "HOST_PRIVATE_IP=$(terraform output -raw host_private_ip)" >> $GITHUB_OUTPUT
+        echo "LOXILB_USER=ubuntu" >> $GITHUB_OUTPUT
         echo "HOST_USER=ubuntu" >> $GITHUB_OUTPUT
-        
-    - name: SSH Commands
+
+
+    - name: Loxilb update
+      uses: appleboy/ssh-action@v0.1.6
+      with:          
+        host: ${{ steps.cicd-ips.outputs.LOXILB_PUBLIC_IP }}
+        username: ${{ steps.cicd-ips.outputs.LOXILB_USER }}
+        key: ${{ secrets.AWS_SSH_KEY }}
+        port: 22
+        script_stop: true
+        script: |
+            uname -a
+            sudo docker exec -it loxilb /root/loxilb-io/loxilb/loxilb -v
+            sudo docker image pull ghcr.io/loxilb-io/loxilb:latest
+            sudo docker stop loxilb
+            sudo docker rm loxilb
+            sudo docker run -u root --cap-add SYS_ADMIN --net host  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+            sleep 20
+            sudo docker exec -it loxilb /root/loxilb-io/loxilb/loxilb -v
+            
+    - name: Host Commands
       uses: appleboy/ssh-action@v0.1.6
       with:
         host: ${{ steps.cicd-ips.outputs.HOST_PUBLIC_IP }}
