@@ -1,4 +1,4 @@
-name: 'LoxiLB with EKS test'
+name: 'EKS test'
 
 on:
   push:
