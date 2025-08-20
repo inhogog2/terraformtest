@@ -18,7 +18,7 @@ resource "random_string" "suffix" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.0.0"
+  version = "5.8.1"
   name = "loxilb-cicd-vpc"  
   cidr = "10.0.0.0/16"
   azs  = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -43,7 +43,7 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.15.3"
+  version = "20.8.5"
 
   cluster_name    = local.cluster_name
   cluster_version = "1.27"
@@ -124,7 +124,7 @@ module "irsa-ebs-csi" {
 
 module "security-group" {
   source  = "terraform-aws-modules/security-group/aws" 
-  version = "5.1.0"                                    
+  version = "5.3.0"                                    
   name        = "LoxiLB-node-sg" 
   description = "LoxiLB node security group"
   vpc_id      = module.vpc.vpc_id
