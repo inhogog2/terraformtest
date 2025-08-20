@@ -1,6 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 provider "aws" {
   region = var.region
 }
@@ -19,7 +16,7 @@ resource "random_string" "suffix" {
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
-  name = "loxilb-cicd-vpc"  
+  name = "loxilb-cicd-vpc"
   cidr = "10.0.0.0/16"
   azs  = slice(data.aws_availability_zones.available.names, 0, 3)
 
@@ -43,22 +40,19 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.8.5"
+  version = "21.1.0"
 
-  cluster_name    = local.cluster_name
-  cluster_version = "1.27"
+  name    = local.cluster_name
+  kubernetes_version = "1.33"
 
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
-  cluster_endpoint_public_access = true
+  endpoint_public_access = true
 
-  eks_managed_node_group_defaults = {
-    ami_type = "AL2_x86_64"
-  }
-  
   eks_managed_node_groups = {
     node = {
       name = "node-group"
+      ami_type = "AL2023_x86_64_STANDARD"
       instance_types = ["t3.small"]
       min_size     = 1
       max_size     = 3
@@ -70,12 +64,12 @@ module "eks" {
 module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   name = "loxilb_node"
-  
+
   ami = "ami-0c016e131d2da56e8"
   instance_type          = "t3.small"
   key_name               = "aws-osaka"
   monitoring             = true
-  
+
   vpc_security_group_ids = [ module.security-group.security_group_id]
   subnet_id              = module.vpc.public_subnets[0]
   associate_public_ip_address = "true"
@@ -84,7 +78,7 @@ module "ec2_instance" {
     Terraform   = "true"
     Environment = "dev"
   }
-}    
+}
 
 module "ec2_instance2" {
   source  = "terraform-aws-modules/ec2-instance/aws"
@@ -106,7 +100,7 @@ module "ec2_instance2" {
 }
 
 
-# https://aws.amazon.com/blogs/containers/amazon-ebs-csi-driver-is-now-generally-available-in-amazon-eks-add-ons/ 
+# https://aws.amazon.com/blogs/containers/amazon-ebs-csi-driver-is-now-generally-available-in-amazon-eks-add-ons/
 data "aws_iam_policy" "ebs_csi_policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
@@ -123,12 +117,12 @@ module "irsa-ebs-csi" {
 }
 
 module "security-group" {
-  source  = "terraform-aws-modules/security-group/aws" 
-  version = "5.3.0"                                    
-  name        = "LoxiLB-node-sg" 
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "5.3.0"
+  name        = "LoxiLB-node-sg"
   description = "LoxiLB node security group"
   vpc_id      = module.vpc.vpc_id
-  use_name_prefix = "false" 
+  use_name_prefix = "false"
   ingress_with_cidr_blocks = [
     {
       from_port   = 22
@@ -197,4 +191,3 @@ resource "aws_security_group_rule" "ingress_with_cluter_to_loxilb" {
        to_port                  = 65535
        type                     = "ingress"
 }
-
