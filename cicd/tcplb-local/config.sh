@@ -36,7 +36,8 @@ config_docker_host --host1 llb1 --host2 l3ep3 --ptype phy --addr 33.33.33.254/24
 
 $dexec llb1 ip addr add 10.10.10.3/32 dev lo
 
-sleep 5
+sleep 30
 docker ps
+ps aux|grep loxilb
 docker logs llb1
 create_lb_rule llb1 10.10.10.3 --tcp=2020:8080 --endpoints=10.10.10.3:1
