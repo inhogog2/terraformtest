@@ -39,5 +39,6 @@ $dexec llb1 ip addr add 10.10.10.3/32 dev lo
 sleep 30
 docker ps
 ps aux|grep loxilb
+docker exec -t llb1 /root/loxilb-io/loxilb/loxilb   --localsockpolicy
 docker logs llb1
 create_lb_rule llb1 10.10.10.3 --tcp=2020:8080 --endpoints=10.10.10.3:1
